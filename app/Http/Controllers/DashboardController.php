@@ -585,20 +585,29 @@ class DashboardController extends Controller
         $notifications = collect();
 
         if ($user->role === 'family') {
-            $patients = EmergencyContact::where('contact_user_id', $user->id)
-                ->where('status', 'accepted')
-                ->with('user.seizures', 'user.vitalSigns')
+            $patients = EmergencyContact::where('status', 'accepted')
+                ->where('contact_user_id', $user->id)
+                ->with([
+                    'user.seizures',
+                    'user.vitalSigns',
+                ])
                 ->get()
-                ->pluck('user')
-                ->filter()
-                ->map(function ($patient) {
+                ->map(function ($contact) {
+                    $patient = $contact->user;
+                    if (!$patient) {
+                        return null;
+                    }
+
                     $latestSeizure = $patient->seizures->sortByDesc('start_time')->first();
                     $latestVital = $patient->vitalSigns->sortByDesc('created_at')->first();
 
                     return [
                         'id' => $patient->id,
                         'name' => $patient->name,
+                        'email' => $patient->email,
                         'phone' => $patient->phone,
+                        'address' => $patient->address,
+                        'relationship' => $contact->relationship,
                         'latitude' => $latestSeizure?->latitude,
                         'longitude' => $latestSeizure?->longitude,
                         'status' => $patient->seizures->whereNull('end_time')->count() ? 'alert' : 'stable',
@@ -606,7 +615,9 @@ class DashboardController extends Controller
                         'active_seizures' => $patient->seizures->whereNull('end_time')->count(),
                         'seizures' => $patient->seizures,
                     ];
-                });
+                })
+                ->filter()
+                ->values();
 
             // Get pending requests for family members
             $pendingRequests = EmergencyContact::where('contact_user_id', $user->id)

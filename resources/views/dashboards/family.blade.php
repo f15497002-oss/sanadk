@@ -106,13 +106,9 @@
                                     <div>
                                         <h4 class="font-bold">{{ $patient['name'] }}</h4>
                                         <p class="text-sm text-gray-500">{{ $patient['phone'] }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                        <span class="text-sm text-gray-600">الحالة:</span>
-                                        <span class="px-2 py-1 rounded-full text-xs font-bold {{ $patient['status'] === 'alert' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600' }}">
+                        @if(!empty($patient['email']))
+                            <p class="text-sm text-gray-500">{{ $patient['email'] }}</p>
+                        @endif
                                             {{ $patient['status'] === 'alert' ? '⚠️ تحذير' : '✓ مستقر' }}
                                         </span>
                                     </div>
@@ -417,6 +413,7 @@
 
         <script>
             const familyPatients = {!! json_encode($patients) !!};
+            const familyPatientsData = Array.isArray(familyPatients) ? familyPatients : Object.values(familyPatients);
             let patientMap;
             let patientMarker;
 
@@ -437,7 +434,7 @@
             }
 
             function getFamilyPatient(patientId) {
-                return familyPatients.find(patient => patient.id === patientId);
+                return familyPatientsData.find(patient => patient.id === patientId);
             }
 
             function viewPatientDetails(patientId) {
@@ -465,10 +462,16 @@
                                     <span>الهاتف</span><strong>${patient.phone || 'غير متوفر'}</strong>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>البريد الإلكتروني</span><strong>${patient.email || 'غير متوفر'}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span>آخر تحديث</span><strong>${patient.last_update || 'لا يوجد'}</strong>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span>عدد النوبات النشطة</span><strong>${patient.active_seizures}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>صلة القرابة</span><strong>${patient.relationship || 'غير محدد'}</strong>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span>الحالة</span>${statusLabel}

@@ -348,7 +348,7 @@ class SeizurePrediction
 
         return $history;
     }
-}
+
     /**
      * Create prediction alerts for family members
      */
@@ -365,9 +365,9 @@ class SeizurePrediction
         }
 
         $contacts = $user->emergencyContacts;
-        $message = 'ÊäÈíå ÊäÈÄ: ' . $user->name . ' Ýí ÎØÑ ' . $analysis['risk_level'] . 
-                  ' ÈäÓÈÉ ' . round($analysis['probability'] * 100) . '%' . 
-                  ($analysis['time_to_event'] ? ' - ÇáæÞÊ ÇáãÊæÞÚ: ' . $analysis['time_to_event'] : '');
+        $message = 'ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ' . $user->name . ' ï¿½ï¿½ ï¿½ï¿½ï¿½ ' . $analysis['risk_level'] . 
+                  ' ï¿½ï¿½ï¿½ï¿½ï¿½ ' . round($analysis['probability'] * 100) . '%' . 
+                  ($analysis['time_to_event'] ? ' - ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ' . $analysis['time_to_event'] : '');
 
         // Send notifications to family
         foreach ($contacts as $contact) {
@@ -378,14 +378,14 @@ class SeizurePrediction
 
             AppNotification::create([
                 'user_id' => $contactUser->id,
-                'title' => 'ÊäÈíå ÊäÈÄ',
+                'title' => 'ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
                 'message' => $message,
                 'type' => 'prediction'
             ]);
 
             // Send email
             Mail::raw($message, function ($mail) use ($contactUser) {
-                $mail->to($contactUser->email)->subject('ÊäÈíå ÊäÈÄ ãä ÓäÏß - ' . now()->toDateTimeString());
+                $mail->to($contactUser->email)->subject('ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ - ' . now()->toDateTimeString());
             });
         }
 
