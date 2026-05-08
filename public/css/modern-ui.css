@@ -1,0 +1,128 @@
+:root {
+    --primary: #4A90E2;
+    --secondary: #50C878;
+    --danger: #FF5252;
+    --warning: #FFB300;
+    --bg-light: #F8F9FE;
+    --card-bg: #FFFFFF;
+    --text-main: #2D3748;
+    --text-muted: #718096;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.circular-progress {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.circular-progress::before {
+    content: "";
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.progress-value {
+    position: relative;
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.nav-item.active {
+    color: var(--primary);
+}
+
+.nav-item i {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.header-profile {
+    background: linear-gradient(135deg, var(--primary), #63A4FF);
+    padding: 30px 20px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-modern {
+    background: var(--primary);
+    color: white;
+    border-radius: 16px;
+    padding: 14px;
+    width: 100%;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.stat-box {
+    background: #F0F7FF;
+    border-radius: 16px;
+    padding: 15px;
+    text-align: center;
+    flex: 1;
+    margin: 0 5px;
+    border-left: 4px solid var(--primary);
+}
+
+.stat-box h4 {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.stat-box p {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary);
+}

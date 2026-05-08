@@ -1,0 +1,545 @@
+<x-app-layout>
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded shadow-sm">
+                    <div>
+                        <h2 class="h4 mb-0 fw-bold text-primary">
+                            <i class="fas fa-users"></i> لوحة تحكم الأهل
+                        </h2>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('settings') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-cog"></i> الإعدادات
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @if(Auth::user()->role === 'family')
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                        <i class="fas fa-check-circle"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                <!-- Pending Requests Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-inbox"></i> طلبات الارتباط بالمريض
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        @forelse($pendingRequests as $request)
+                            <div class="bg-white border-l-4 border-orange-400 p-4 rounded-lg shadow-sm">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-bold text-lg">{{ $request['name'] }}</h4>
+                                        <p class="text-sm text-gray-500">{{ $request['email'] }}</p>
+                                        <p class="text-sm text-gray-600 mt-1">العلاقة: {{ $request['relationship'] }}</p>
+                                    </div>
+                                    <span class="badge bg-warning text-dark">قيد الانتظار</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">يطلب إضافة أنت كفرد عائلة</p>
+                                <div class="flex gap-2">
+                                    <form method="POST" action="{{ route('family.accept-request') }}" class="flex-1">
+                                        @csrf
+                                        <input type="hidden" name="request_id" value="{{ $request['id'] }}">
+                                        <button type="submit" class="btn btn-sm btn-success w-100">
+                                            <i class="fas fa-check"></i> قبول
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('family.reject-request') }}" class="flex-1">
+                                        @csrf
+                                        <input type="hidden" name="request_id" value="{{ $request['id'] }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                            <i class="fas fa-times"></i> رفض
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-2">
+                                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-center">
+                                    <i class="fas fa-info-circle text-2xl mb-2"></i>
+                                    <p class="font-semibold">لا توجد طلبات ارتباط معلقة</p>
+                                    <p class="text-sm">سيتم عرض الطلبات الجديدة هنا عند وصولها</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Patient Status Overview -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-users text-primary"></i> حالة المرضى المتابعين
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        @forelse($patients as $patient)
+                            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 {{ $patient['status'] === 'alert' ? 'border-red-500' : 'border-green-500' }}">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-600 text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold">{{ $patient['name'] }}</h4>
+                                        <p class="text-sm text-gray-500">{{ $patient['phone'] }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm text-gray-600">الحالة:</span>
+                                        <span class="px-2 py-1 rounded-full text-xs font-bold {{ $patient['status'] === 'alert' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600' }}">
+                                            {{ $patient['status'] === 'alert' ? '⚠️ تحذير' : '✓ مستقر' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm text-gray-600">آخر تحديث:</span>
+                                        <span class="text-sm">{{ $patient['last_update'] }}</span>
+                                    </div>
+
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm text-gray-600">نوبات:</span>
+                                        <span class="text-sm font-bold text-red-600">{{ $patient['active_seizures'] }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="viewPatientDetails({{ $patient['id'] }})" class="flex-1 btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> التفاصيل
+                                    </button>
+                                    <button onclick="shareLocation({{ $patient['id'] }})" class="flex-1 btn btn-sm btn-info">
+                                        <i class="fas fa-map-marker-alt"></i> الموقع
+                                    </button>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-3">
+                                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-center">
+                                    <i class="fas fa-info-circle text-2xl mb-2"></i>
+                                    <p class="font-semibold">لا يوجد مرضى متابعين</p>
+                                    <p class="text-sm">في انتظار طلبات ارتباط من المرضى</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Tabs Section -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex gap-8 px-6" aria-label="Tabs">
+                            <button onclick="showFamilyTab('monitoring', this)" class="family-tab-button active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                                <i class="fas fa-heart-pulse"></i> المراقبة
+                            </button>
+                            <button onclick="showFamilyTab('history', this)" class="family-tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                <i class="fas fa-history"></i> السجل
+                            </button>
+                            <button onclick="showFamilyTab('notifications', this)" class="family-tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                <i class="fas fa-bell"></i> التنبيهات
+                            </button>
+                            <button onclick="showFamilyTab('settings', this)" class="family-tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                <i class="fas fa-sliders-h"></i> الإعدادات
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Monitoring Tab -->
+                    <div id="monitoring-tab" class="family-tab-content p-6">
+                        <h3 class="text-lg font-bold mb-4"><i class="fas fa-heart-pulse text-danger"></i> مراقبة الحالة الحالية</h3>
+                        <div class="space-y-4">
+                            @forelse($patients as $patient)
+                                <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition">
+                                    <div class="flex items-center gap-4 flex-1">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                            {{ substr($patient['name'], 0, 1) }}
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-lg">{{ $patient['name'] }}</h4>
+                                            <p class="text-sm text-gray-500">آخر تحديث: {{ $patient['last_update'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        @if($patient['active_seizures'])
+                                            <div class="mb-2">
+                                                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold animate-pulse">
+                                                    <i class="fas fa-exclamation-triangle"></i> تنبيه نشط
+                                                </span>
+                                            </div>
+                                        @else
+                                            <div class="mb-2">
+                                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">
+                                                    <i class="fas fa-check-circle"></i> مستقر
+                                                </span>
+                                            </div>
+                                        @endif
+                                        <div class="flex gap-2">
+                                            <button class="text-blue-600 hover:underline text-xs" onclick="viewFamilyPatientDetails({{ $patient['id'] }})">
+                                                <i class="fas fa-eye"></i> التفاصيل
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-gray-500 text-center"><i class="fas fa-inbox"></i> لا يوجد مرضى</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div id="history-tab" class="family-tab-content hidden p-6">
+                        <h3 class="text-lg font-bold mb-4"><i class="fas fa-history text-info"></i> سجل النوبات</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المريض</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدة</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @php
+                                        $allSeizures = collect($patients)->flatMap(fn($p) => $p['seizures'])->sortByDesc('start_time');
+                                    @endphp
+                                    @forelse($allSeizures as $seizure)
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $seizure->user->name }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $seizure->start_time->format('Y-m-d H:i') }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $seizure->end_time ? $seizure->end_time->diffInMinutes($seizure->start_time) . ' م' : 'جارية' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs font-semibold rounded-full {{ $seizure->end_time ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                    {{ $seizure->end_time ? '✓ انتهت' : '⚠️ جارية' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد نوبات</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Tab -->
+                    <div id="notifications-tab" class="family-tab-content hidden p-6">
+                        <h3 class="text-lg font-bold mb-4"><i class="fas fa-bell text-warning"></i> التنبيهات والإشعارات</h3>
+                        <div id="notificationsContainer" class="space-y-3">
+                            @forelse($notifications as $notification)
+                                <div class="border-l-4 {{ $notification['type'] === 'emergency' ? 'border-red-500 bg-red-50' : ($notification['type'] === 'prediction' ? 'border-orange-500 bg-orange-50' : 'border-green-500 bg-green-50') }} p-4 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fas {{ $notification['type'] === 'emergency' ? 'fa-exclamation-circle text-red-600' : ($notification['type'] === 'prediction' ? 'fa-exclamation-triangle text-orange-600' : 'fa-check-circle text-green-600') }} text-lg"></i>
+                                        <div class="flex-1">
+                                            <h5 class="font-bold {{ $notification['type'] === 'emergency' ? 'text-red-800' : ($notification['type'] === 'prediction' ? 'text-orange-800' : 'text-green-800') }}">
+                                                {{ $notification['title'] }}
+                                            </h5>
+                                            <p class="text-sm {{ $notification['type'] === 'emergency' ? 'text-red-700' : ($notification['type'] === 'prediction' ? 'text-orange-700' : 'text-green-700') }}">
+                                                {{ $notification['patient_name'] }} - {{ $notification['message'] }}
+                                            </p>
+                                            <p class="text-xs {{ $notification['type'] === 'emergency' ? 'text-red-600' : ($notification['type'] === 'prediction' ? 'text-orange-600' : 'text-green-600') }} mt-1">
+                                                <i class="fas fa-clock"></i> {{ $notification['created_at']->diffForHumans() }}
+                                            </p>
+                                        </div>
+                                        @if(!$notification['is_read'])
+                                            <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">جديد</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-center">
+                                    <i class="fas fa-info-circle text-2xl mb-2"></i>
+                                    <p class="font-semibold">لا توجد تنبيهات</p>
+                                    <p class="text-sm">سيتم عرض التنبيهات الجديدة هنا عند وصولها</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="settings-tab" class="family-tab-content hidden p-6">
+                        <h3 class="text-lg font-bold mb-4"><i class="fas fa-sliders-h text-secondary"></i> إعدادات التنبيهات</h3>
+                        <div class="space-y-4">
+                            @forelse($patients as $patient)
+                                <div class="border rounded-lg p-4 shadow-sm">
+                                    <h4 class="font-bold mb-3">{{ $patient['name'] }}</h4>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="rounded" data-setting="seizure-{{ $patient['id'] }}" checked>
+                                            <span class="ml-2"><i class="fas fa-zap text-danger"></i> تنبيهات النوبات</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="rounded" data-setting="prediction-{{ $patient['id'] }}" checked>
+                                            <span class="ml-2"><i class="fas fa-brain text-primary"></i> تنبيهات التنبؤ</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="rounded" data-setting="location-{{ $patient['id'] }}" checked>
+                                            <span class="ml-2"><i class="fas fa-location-dot text-success"></i> تحديثات الموقع</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="rounded" data-setting="health-{{ $patient['id'] }}" checked>
+                                            <span class="ml-2"><i class="fas fa-heart text-danger"></i> العلامات الحيوية</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-gray-500"><i class="fas fa-inbox"></i> لا يوجد مرضى</p>
+                            @endforelse
+                            <div class="mt-4">
+                                <button onclick="saveNotificationSettings()" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> حفظ الإعدادات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            @elseif(Auth::user()->role === 'patient')
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                        <i class="fas fa-check-circle"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="card-modern">
+                            <h3 class="h4 fw-bold mb-3">طلب ارتباط بفرد العائلة</h3>
+                            <p class="text-muted mb-4">أضف بيانات شخص العائلة ليتم إرسال تنبيهات له عند حدوث نوبة.</p>
+                            <form method="POST" action="{{ route('family.store') }}" class="space-y-4">
+                                @csrf
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">الاسم</label>
+                                    <input type="text" name="name" value="{{ old('name') }}" class="form-control rounded-3" required>
+                                    @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">البريد الإلكتروني</label>
+                                    <input type="email" name="email" value="{{ old('email') }}" class="form-control rounded-3" required>
+                                    <small class="text-muted">يجب أن يكون مسجلاً برول family</small>
+                                    @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">رقم الهاتف (اختياري)</label>
+                                    <input type="text" name="phone" value="{{ old('phone') }}" class="form-control rounded-3">
+                                    @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">صلة القرابة</label>
+                                    <input type="text" name="relationship" value="{{ old('relationship') }}" class="form-control rounded-3" placeholder="الأب، الأم، الأخ..." required>
+                                    @error('relationship')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3">
+                                    <i class="fas fa-send"></i> إرسال طلب الارتباط
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card-modern">
+                            <h3 class="h4 fw-bold mb-3">
+                                <i class="fas fa-users text-primary"></i> أفراد العائلة المرتبطين
+                            </h3>
+                            @if($contacts && $contacts->count() > 0)
+                                <div class="space-y-3">
+                                    @foreach($contacts as $contact)
+                                        <div class="border rounded-3 p-3">
+                                            <h5 class="fw-bold mb-1">{{ $contact->name }}</h5>
+                                            <p class="small text-muted mb-1">{{ $contact->relationship }}</p>
+                                            <p class="small text-muted"><i class="fas fa-phone"></i> {{ $contact->phone }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-muted text-center">
+                                    <i class="fas fa-inbox text-muted" style="font-size: 2rem;"></i>
+                                    <br>لا يوجد أفراد عائلة مسجلين
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <!-- Patient Details Modal -->
+        <div class="modal fade" id="familyPatientModal" tabindex="-1" aria-labelledby="familyPatientModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="familyPatientModalLabel"><i class="fas fa-user"></i> تفاصيل المريض</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="familyPatientDetailsContent"></div>
+                        <div id="familyPatientMapContainer" class="mt-4" style="display:none;">
+                            <h6 class="mb-2"><i class="fas fa-map-marker-alt"></i> الموقع الحالي</h6>
+                            <div id="familyPatientMap" style="height: 320px; min-height: 320px;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-sA+eHaPhx7OqrUZo3Qzo4WfQX2n+QewU+2zxD61uQgVJt8YCIdQfP3ffqM2SlsYvLkioz0E4xL9a3dMImBQ7Ng==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-oH0hG8P2qzM2qY5rCFePmr8uVwW6b8I+qANgl31mV+ELUnv6FjF6h0eR4xXG9zMTwJjX8LUxGJvm5cLJOdrcQg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+        <script>
+            const familyPatients = {!! json_encode($patients) !!};
+            let patientMap;
+            let patientMarker;
+
+            function showFamilyTab(tabName, button) {
+                document.querySelectorAll('.family-tab-content').forEach(tab => {
+                    tab.classList.add('hidden');
+                });
+                document.querySelectorAll('.family-tab-button').forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+
+                document.getElementById(tabName + '-tab').classList.remove('hidden');
+                if (button) {
+                    button.classList.remove('border-transparent', 'text-gray-500');
+                    button.classList.add('border-blue-500', 'text-blue-600');
+                }
+            }
+
+            function getFamilyPatient(patientId) {
+                return familyPatients.find(patient => patient.id === patientId);
+            }
+
+            function viewPatientDetails(patientId) {
+                showFamilyPatientDetails(patientId);
+            }
+
+            function renderPatientDetails(patient) {
+                const statusLabel = patient.status === 'alert' ?
+                    '<span class="badge bg-danger">تحذير</span>' :
+                    '<span class="badge bg-success">مستقر</span>';
+
+                const latestSeizure = patient.seizures && patient.seizures.length ? patient.seizures[0] : null;
+                const seizureText = latestSeizure ?
+                    `آخر نوبة: ${latestSeizure.start_time ? new Date(latestSeizure.start_time).toLocaleString('ar-EG') : 'غير متوفر'}` :
+                    'لا توجد نوبات مسجلة';
+
+                return `
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>الاسم</span><strong>${patient.name}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>الهاتف</span><strong>${patient.phone || 'غير متوفر'}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>آخر تحديث</span><strong>${patient.last_update || 'لا يوجد'}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>عدد النوبات النشطة</span><strong>${patient.active_seizures}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>الحالة</span>${statusLabel}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="mb-3">معلومات إضافية</h6>
+                                <p class="mb-2"><strong>العنوان:</strong> ${patient.address || 'غير متوفر'}</p>
+                                <p class="mb-2"><strong>إحداثيات:</strong> ${patient.latitude && patient.longitude ? patient.latitude + ', ' + patient.longitude : 'غير متوفرة'}</p>
+                                <p class="mb-2"><strong>معلومات النوبة:</strong> ${seizureText}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function showFamilyPatientDetails(patientId) {
+                const patient = getFamilyPatient(patientId);
+                if (!patient) {
+                    alert('المريض غير موجود. تأكد من قبول الطلب أولاً.');
+                    return;
+                }
+
+                document.getElementById('familyPatientDetailsContent').innerHTML = renderPatientDetails(patient);
+                document.getElementById('familyPatientMapContainer').style.display = 'none';
+                const familyPatientModal = new bootstrap.Modal(document.getElementById('familyPatientModal'));
+                familyPatientModal.show();
+            }
+
+            function shareLocation(patientId) {
+                const patient = getFamilyPatient(patientId);
+                if (!patient) {
+                    alert('المريض غير موجود. تأكد من قبول الطلب أولاً.');
+                    return;
+                }
+
+                if (!patient.latitude || !patient.longitude) {
+                    alert('لا توجد بيانات موقع لهذا المريض حالياً.');
+                    return;
+                }
+
+                document.getElementById('familyPatientDetailsContent').innerHTML = `
+                    <div class="alert alert-info">سيتم عرض الموقع الحالي للمريض أدناه.</div>
+                `;
+                document.getElementById('familyPatientMapContainer').style.display = 'block';
+
+                const mapElement = document.getElementById('familyPatientMap');
+                if (!patientMap) {
+                    patientMap = L.map(mapElement).setView([patient.latitude, patient.longitude], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(patientMap);
+                }
+
+                if (patientMarker) {
+                    patientMap.removeLayer(patientMarker);
+                }
+
+                patientMarker = L.marker([patient.latitude, patient.longitude]).addTo(patientMap)
+                    .bindPopup(`<strong>${patient.name}</strong><br>آخر موقع معروف`).openPopup();
+                patientMap.setView([patient.latitude, patient.longitude], 13);
+
+                const familyPatientModal = new bootstrap.Modal(document.getElementById('familyPatientModal'));
+                familyPatientModal.show();
+            }
+
+            function saveNotificationSettings() {
+                alert('تم حفظ الإعدادات بنجاح');
+            }
+        </script>
+    </div>
+</x-app-layout>
